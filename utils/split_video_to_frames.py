@@ -10,10 +10,18 @@ def parse_args():
     Returns:
         arguments (Namespace) - Parsed arguments.
     """
-    parser = ArgumentParser(description="The script splits video to frames with specific time spacing.")
+    parser = ArgumentParser(
+        description="The script splits video to frames with specific time spacing."
+    )
     parser.add_argument("--video-path", type=str, help="A path to a video.")
-    parser.add_argument("--frames-directory", type=str, help="A path to a directory, where frames should be saved.")
-    parser.add_argument("--spacing", type=int, help="Spacing between frames.", default=10)
+    parser.add_argument(
+        "--frames-directory",
+        type=str,
+        help="A path to a directory, where frames should be saved.",
+    )
+    parser.add_argument(
+        "--spacing", type=int, help="Spacing between frames.", default=10
+    )
     args = parser.parse_args()
 
     return args
@@ -32,12 +40,12 @@ def split_video_to_frames(video_path: str, frames_dir: str, spacing: int) -> Non
     capture = cv2.VideoCapture(video_path)
     frame_counter = 0
 
-    while(True):
+    while True:
         success, frame = capture.read()
 
         if success:
             if frame_counter % spacing == 0:
-                frame_filename = str(frame_counter)+".jpg"
+                frame_filename = str(frame_counter) + ".jpg"
                 frame_path = os.path.join(frames_dir, frame_filename)
                 cv2.imwrite(frame_path, frame)
         else:
