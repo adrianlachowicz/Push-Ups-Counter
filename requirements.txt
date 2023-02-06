@@ -1,4 +1,6 @@
 numpy
+pandas
+black
 matplotlib
 mediapipe
 opencv-python==4.5.5.62
