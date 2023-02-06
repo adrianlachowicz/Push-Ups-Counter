@@ -1,8 +1,10 @@
+import os
 import cv2
+import math
 import numpy as np
 import pandas as pd
 import mediapipe as mp
-import matplotlib.pyplot as plt
+from tqdm import tqdm
 from argparse import ArgumentParser
 
 
@@ -16,7 +18,7 @@ def parse_args():
     parser = ArgumentParser(
         description="The script extracts body landmarks from passed image."
     )
-    parser.add_argument("--image-path", help="A path to a image.")
+    parser.add_argument("--dir-path", help="A path to a directory.")
     args = parser.parse_args()
     return args
 
@@ -57,12 +59,15 @@ def load_mediapipe_model():
     return pose
 
 
-def extract_landmarks_from_image(img: np.array, model: mp.solutions.pose.Pose):
+def extract_landmarks_from_image(
+    img: np.array, img_path: str, model: mp.solutions.pose.Pose
+):
     """
     The function extracts landmarks from image using the Mediapipe model and returns appropriate coordinates.
 
     Arguments:
-        img (np.array) - A image
+        img (np.array) - A image.
+        img_path (str) - A path to an image (only for inserting into a data row).
         model (mp.solutions.pose.Pose) - The Mediapipe model, which predicts pose landmarks
 
     Returns:
@@ -108,7 +113,25 @@ def extract_landmarks_from_image(img: np.array, model: mp.solutions.pose.Pose):
     r_wr_x = r_wr.x
     r_wr_y = r_wr.y
 
+    # Calculate distances between landmarks
+    # Left side body
+    l_shoulder_elbow_distance = calculate_distance_between_points(
+        l_sh_x, l_sh_y, l_el_x, l_el_y
+    )
+    l_shoulder_wrist_distance = calculate_distance_between_points(
+        l_sh_x, l_sh_y, l_wr_x, l_wr_y
+    )
+
+    # Right side body
+    r_shoulder_elbow_distance = calculate_distance_between_points(
+        r_sh_x, r_sh_y, r_el_x, r_el_y
+    )
+    r_shoulder_wrist_distance = calculate_distance_between_points(
+        r_sh_x, r_sh_y, r_wr_x, r_wr_y
+    )
+
     data = {
+        "IMG_PATH": img_path,
         "LEFT_SHOULDER_X": l_sh_x,
         "LEFT_SHOULDER_Y": l_sh_y,
         "LEFT_ELBOW_X": l_el_x,
@@ -121,6 +144,10 @@ def extract_landmarks_from_image(img: np.array, model: mp.solutions.pose.Pose):
         "RIGHT_ELBOW_Y": r_el_y,
         "RIGHT_WRIST_X": r_wr_x,
         "RIGHT_WRIST_Y": r_wr_y,
+        "LEFT_SHOULDER_ELBOW_DISTANCE": l_shoulder_elbow_distance,
+        "LEFT_SHOULDER_WRIST_DISTANCE": l_shoulder_wrist_distance,
+        "RIGHT_SHOULDER_ELBOW_DISTANCE": r_shoulder_elbow_distance,
+        "RIGHT_SHOULDER_WRIST_DISTANCE": r_shoulder_wrist_distance,
     }
 
     coordinates_df = pd.DataFrame(data, index=[0])
@@ -128,12 +155,72 @@ def extract_landmarks_from_image(img: np.array, model: mp.solutions.pose.Pose):
     return coordinates_df
 
 
-if __name__ == "__main__":
-    args = parse_args()
+def calculate_distance_between_points(
+    point_a_x: float, point_a_y: float, point_b_x: float, point_b_y: float
+) -> float:
+    """
+    The function calculates distance between two points.
 
-    image_path = args.image_path
+    Arguments:
+        point_a_x (float) - A X axis coordinate of the A point.
+        point_a_y (float) - A Y axis coordinate of the A point.
+        point_b_x (float) - A X axis coordinate of the B point.
+        point_b_y (float) - A Y axis coordinate of the A point.
+
+    Returns:
+        distance (float) - A distance between the A point and the B point.
+    """
+    distance = math.sqrt(
+        math.pow(point_a_x - point_b_x, 2) + math.pow(point_a_y - point_b_y, 2)
+    )
+
+    return distance
+
+
+def extract_landmarks(dir_path: str):
+    """
+    The function extracts landmarks from all images in a specific directory.
+    Next, when the Mediapipe model end processing images, it saves outputs as .csv file.
+
+    Arguments:
+        dir_path (str) - A path to a directory, which contains images.
+    """
+    data = pd.DataFrame(
+        columns=[
+            "IMG_PATH",
+            "LEFT_SHOULDER_X",
+            "LEFT_SHOULDER_Y",
+            "LEFT_ELBOW_X",
+            "LEFT_ELBOW_Y",
+            "LEFT_WRIST_X",
+            "LEFT_WRIST_Y",
+            "RIGHT_SHOULDER_X" "RIGHT_SHOULDER_Y",
+            "RIGHT_ELBOW_X",
+            "RIGHT_ELBOW_Y",
+            "RIGHT_WRIST_X",
+            "RIGHT_WRIST_Y",
+            "LEFT_SHOULDER_ELBOW_DISTANCE",
+            "LEFT_SHOULDER_WRIST_DISTANCE",
+            "RIGHT_SHOULDER_ELBOW_DISTANCE",
+            "RIGHT_SHOULDER_WRIST_DISTANCE",
+        ]
+    )
 
     model = load_mediapipe_model()
-    img = load_image(image_path)
+    _, _, files = next(os.walk(dir_path))
 
-    extract_landmarks_from_image(img, model)
+    for file in tqdm(files):
+        file_path = os.path.join(dir_path, file)
+        img = load_image(file_path)
+
+        row = extract_landmarks_from_image(img, file_path, model)
+        data = pd.concat([data, row], ignore_index=True)
+
+    data.to_csv("./data.csv", index=False)
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    dir_path = args.dir_path
+
+    extract_landmarks(dir_path)
