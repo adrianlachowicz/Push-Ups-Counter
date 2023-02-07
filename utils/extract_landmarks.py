@@ -16,9 +16,10 @@ def parse_args():
         arguments (Namespace) - Parsed arguments.
     """
     parser = ArgumentParser(
-        description="The script extracts body landmarks from passed image."
+        description="The script extracts body landmarks from passed images by .csv file from the Roboflow service."
     )
-    parser.add_argument("--dir-path", help="A path to a directory.")
+    parser.add_argument("--csv-path", help="A path to a .csv file.")
+    parser.add_argument("--dir-path", help="A path to a directory, which contains images.")
     args = parser.parse_args()
     return args
 
@@ -177,12 +178,13 @@ def calculate_distance_between_points(
     return distance
 
 
-def extract_landmarks(dir_path: str):
+def extract_landmarks(csv_path: str, dir_path: str):
     """
     The function extracts landmarks from all images in a specific directory.
     Next, when the Mediapipe model end processing images, it saves outputs as .csv file.
 
     Arguments:
+        csv_path (str) -  A path to a .csv file.
         dir_path (str) - A path to a directory, which contains images.
     """
     data = pd.DataFrame(
@@ -207,7 +209,20 @@ def extract_landmarks(dir_path: str):
     )
 
     model = load_mediapipe_model()
-    _, _, files = next(os.walk(dir_path))
+    df = pd.read_csv(csv_path)
+    files = df["filename"].values
+
+    labels_vec = df[[" push_down", " push_up"]].values
+    labels = []
+
+    # Labels for Cross Entropy Loss
+    #   Push down -> 0
+    #   Push up   -> 1
+
+    for vec in labels_vec:
+        labels.append(np.argmax(vec))
+
+    labels = pd.Series(labels, name="Label")
 
     for file in tqdm(files):
         file_path = os.path.join(dir_path, file)
@@ -216,11 +231,14 @@ def extract_landmarks(dir_path: str):
         row = extract_landmarks_from_image(img, file_path, model)
         data = pd.concat([data, row], ignore_index=True)
 
+    data = pd.concat([data, labels], axis="columns")
+
     data.to_csv("./data.csv", index=False)
 
 
 if __name__ == "__main__":
     args = parse_args()
+    csv_path = args.csv_path
     dir_path = args.dir_path
 
-    extract_landmarks(dir_path)
+    extract_landmarks(csv_path, dir_path)
