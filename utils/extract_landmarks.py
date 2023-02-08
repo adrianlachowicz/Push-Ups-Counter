@@ -224,12 +224,18 @@ def extract_landmarks(csv_path: str, dir_path: str):
 
     labels = pd.Series(labels, name="Label")
 
-    for file in tqdm(files):
-        file_path = os.path.join(dir_path, file)
-        img = load_image(file_path)
+    current_file = ""
 
-        row = extract_landmarks_from_image(img, file_path, model)
-        data = pd.concat([data, row], ignore_index=True)
+    for file in tqdm(files):
+        try:
+            current_file = file
+            file_path = os.path.join(dir_path, file)
+            img = load_image(file_path)
+
+            row = extract_landmarks_from_image(img, file_path, model)
+            data = pd.concat([data, row], ignore_index=True)
+        except:
+            print("Error on processing image: {}".format(current_file))
 
     data = pd.concat([data, labels], axis="columns")
 
