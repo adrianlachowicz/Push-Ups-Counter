@@ -19,7 +19,9 @@ def parse_args():
         description="The script extracts body landmarks from passed images by .csv file from the Roboflow service."
     )
     parser.add_argument("--csv-path", help="A path to a .csv file.")
-    parser.add_argument("--dir-path", help="A path to a directory, which contains images.")
+    parser.add_argument(
+        "--dir-path", help="A path to a directory, which contains images."
+    )
     args = parser.parse_args()
     return args
 
