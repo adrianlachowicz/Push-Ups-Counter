@@ -5,3 +5,4 @@ black
 tqdm
 mediapipe
 opencv-python==4.5.5.62
+wandb
