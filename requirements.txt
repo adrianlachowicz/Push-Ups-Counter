@@ -6,6 +6,7 @@ tqdm
 mediapipe
 opencv-python==4.5.5.62
 wandb
+scikit-learn
 
 -i https://download.pytorch.org/whl/cu116
 torch==1.13.1+cu116
