@@ -133,3 +133,6 @@ dmypy.json
 
 # Data directory
 data/
+
+# WandB directory
+wandb/
