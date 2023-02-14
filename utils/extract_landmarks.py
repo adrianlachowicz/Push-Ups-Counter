@@ -19,7 +19,9 @@ def parse_args():
         description="The script extracts body landmarks from passed images by .csv file from the Roboflow service."
     )
     parser.add_argument("--csv-path", help="A path to a .csv file.")
-    parser.add_argument("--dir-path", help="A path to a directory, which contains images.")
+    parser.add_argument(
+        "--dir-path", help="A path to a directory, which contains images."
+    )
     args = parser.parse_args()
     return args
 
@@ -131,6 +133,13 @@ def extract_landmarks_from_image(
         r_sh_x, r_sh_y, r_wr_x, r_wr_y
     )
 
+    l_shoulder_wrist_y_distance = calculate_distance_between_points_y_axis(
+        l_sh_y, l_wr_y
+    )
+    r_shoulder_wrist_y_distance = calculate_distance_between_points_y_axis(
+        r_sh_y, r_wr_y
+    )
+
     data = {
         "IMG_PATH": img_path,
         "LEFT_SHOULDER_X": l_sh_x,
@@ -149,6 +158,8 @@ def extract_landmarks_from_image(
         "LEFT_SHOULDER_WRIST_DISTANCE": l_shoulder_wrist_distance,
         "RIGHT_SHOULDER_ELBOW_DISTANCE": r_shoulder_elbow_distance,
         "RIGHT_SHOULDER_WRIST_DISTANCE": r_shoulder_wrist_distance,
+        "LEFT_SHOULDER_WRIST_Y_DISTANCE": l_shoulder_wrist_y_distance,
+        "RIGHT_SHOULDER_WRIST_Y_DISTANCE": r_shoulder_wrist_y_distance,
     }
 
     coordinates_df = pd.DataFrame(data, index=[0])
@@ -174,6 +185,25 @@ def calculate_distance_between_points(
     distance = math.sqrt(
         math.pow(point_a_x - point_b_x, 2) + math.pow(point_a_y - point_b_y, 2)
     )
+
+    return distance
+
+
+def calculate_distance_between_points_y_axis(pointA: float, pointB: float) -> float:
+    """
+    The function calculates distance between 2 points based on the Y axis.
+
+    Arguments:
+        pointA (float) - A Y axis coordinate of the point A.
+        pointB (float) - A Y axis coordinate of the point B.
+
+    Returns:
+        distance (float) - A distance between the A point and the B point.
+    """
+    y1 = max(pointA, pointB)
+    y2 = min(pointA, pointB)
+
+    distance = y1 - y2
 
     return distance
 
@@ -206,6 +236,8 @@ def extract_landmarks(csv_path: str, dir_path: str):
             "LEFT_SHOULDER_WRIST_DISTANCE",
             "RIGHT_SHOULDER_ELBOW_DISTANCE",
             "RIGHT_SHOULDER_WRIST_DISTANCE",
+            "LEFT_SHOULDER_WRIST_Y_DISTANCE",
+            "RIGHT_SHOULDER_WRIST_Y_DISTANCE",
         ]
     )
 
