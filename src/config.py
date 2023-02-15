@@ -13,8 +13,8 @@ TEST_DATA_PATH = "./data/youtube_videos/1/test/"
 CSV_FILENAME = "data.csv"
 
 # Training config
-TRAIN_NAME = "test1"
-EPOCHS = 10
+TRAIN_NAME = "normalized-dataset-weights"
+EPOCHS = 400
 BATCH_SIZE = 16
 NUM_WORKERS = 1
 LEARNING_RATE = 0.001
