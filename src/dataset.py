@@ -8,10 +8,8 @@ class PushUpsDataset(Dataset):
     The dataset. It loads data from a .csv file, preprocess inputs, and returns in an appropriate format.
     The output data consist of:
         - Inputs for model:
-            - LEFT_SHOULDER_ELBOW_DISTANCE
-            - LEFT_SHOULDER_WRIST_DISTANCE
-            - RIGHT_SHOULDER_ELBOW_DISTANCE
-            - RIGHT_SHOULDER_WRIST_DISTANCE
+            - LEFT_SHOULDER_WRIST_Y_DISTANCE
+            - RIGHT_SHOULDER_WRIST_Y_DISTANCE
         - A target for a classification output
             - Label (0 as a down stage and 1 as an up stage)
 
@@ -31,18 +29,16 @@ class PushUpsDataset(Dataset):
     def __getitem__(self, item):
         row = self.df.loc[item]
 
-        left_shoulder_elbow_distance = row["LEFT_SHOULDER_ELBOW_DISTANCE"]
-        left_shoulder_wrist_distance = row["LEFT_SHOULDER_WRIST_DISTANCE"]
-        right_shoulder_elbow_distance = row["RIGHT_SHOULDER_ELBOW_DISTANCE"]
-        right_shoulder_wrist_distance = row["RIGHT_SHOULDER_WRIST_DISTANCE"]
+        left_shoulder_wrist_distance = row["LEFT_SHOULDER_WRIST_Y_DISTANCE"]
+        right_shoulder_wrist_distance = row["RIGHT_SHOULDER_WRIST_Y_DISTANCE"]
+
         label = row["Label"]
 
         inputs = [
-            left_shoulder_elbow_distance,
             left_shoulder_wrist_distance,
-            right_shoulder_elbow_distance,
             right_shoulder_wrist_distance,
         ]
+
         inputs = torch.tensor(inputs, dtype=torch.float32)
 
         targets = label
