@@ -133,3 +133,9 @@ dmypy.json
 
 # Data directory
 data/
+
+# WandB directory
+wandb/
+
+# Model checkpoints directory
+src/models
