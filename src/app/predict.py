@@ -4,7 +4,7 @@ import numpy as np
 import mediapipe as mp
 from PIL import Image
 from model import Model
-from config import DEVICE
+from config import *
 
 
 def load_models():
@@ -28,7 +28,7 @@ def load_models():
     classifier = Model()
     classifier.load_state_dict(
         torch.load(
-            "/workspaces/Push-Ups-Counter/src/pipeline/models_checkpoints/basic-classifier.pth",
+            CLASSIFIER_CHECKPOINT,
             map_location=torch.device(DEVICE),
         )
     )
