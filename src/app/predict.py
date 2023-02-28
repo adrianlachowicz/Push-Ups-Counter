@@ -45,7 +45,10 @@ def extract_landmarks_and_distances(img: np.array, model: mp.solutions.pose.Pose
         img (np.array) - A image in the numpy array format.
 
     Returns:
+        l_distance (float) - A distance between left shoulder and left wrist in the Y axis.
+        r_distance (float) - A distance between right shoulder and right wrist in the Y axis.
 
+        -1 (int) - If the Mediapipe model can't extract landmarks -> Return -1.
     """
 
     results = model.process(img)
@@ -54,25 +57,27 @@ def extract_landmarks_and_distances(img: np.array, model: mp.solutions.pose.Pose
     #   first fragment:    l -> left   /   r -> right
     #   second fragment:   sh -> shoulder   /   el -> elbow   /   wr -> wrist
     #   third fragment:    x -> The X axis coordinate   /   y -> The Y axis coordinate
+    try:
+        l_sh_y = results.pose_landmarks.landmark[
+            mp.solutions.pose.PoseLandmark.LEFT_SHOULDER
+        ].y
+        l_wr_y = results.pose_landmarks.landmark[
+            mp.solutions.pose.PoseLandmark.LEFT_WRIST
+        ].y
 
-    l_sh_y = results.pose_landmarks.landmark[
-        mp.solutions.pose.PoseLandmark.LEFT_SHOULDER
-    ].y
-    l_wr_y = results.pose_landmarks.landmark[
-        mp.solutions.pose.PoseLandmark.LEFT_WRIST
-    ].y
+        r_sh_y = results.pose_landmarks.landmark[
+            mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER
+        ].y
+        r_wr_y = results.pose_landmarks.landmark[
+            mp.solutions.pose.PoseLandmark.RIGHT_WRIST
+        ].y
 
-    r_sh_y = results.pose_landmarks.landmark[
-        mp.solutions.pose.PoseLandmark.RIGHT_SHOULDER
-    ].y
-    r_wr_y = results.pose_landmarks.landmark[
-        mp.solutions.pose.PoseLandmark.RIGHT_WRIST
-    ].y
+        l_distance = max(l_sh_y, l_wr_y) - min(l_sh_y, l_wr_y)
+        r_distance = max(r_sh_y, r_wr_y) - min(r_sh_y, r_wr_y)
 
-    l_distance = max(l_sh_y, l_wr_y) - min(l_sh_y, l_wr_y)
-    r_distance = max(r_sh_y, r_wr_y) - min(r_sh_y, r_wr_y)
-
-    return [l_distance, r_distance]
+        return [l_distance, r_distance]
+    except:
+        return -1
 
 
 def preprocess_data(data: list):
@@ -107,12 +112,15 @@ def predict(img: np.array):
 
     # Extract data from image
     data = extract_landmarks_and_distances(img, mp_model)
-    data = preprocess_data(data)
+    if data != -1:
+        data = preprocess_data(data)
 
-    # Predict label using classifier
-    outputs = classifier_model(data)
-    probs, labels = torch.topk(torch.softmax(outputs, dim=0), k=1)
-    prob = probs.item()
-    label = labels.item()
+        # Predict label using classifier
+        outputs = classifier_model(data)
+        probs, labels = torch.topk(torch.softmax(outputs, dim=0), k=1)
+        prob = probs.item()
+        label = labels.item()
 
-    return label
+        return label
+    else:
+        return -1
