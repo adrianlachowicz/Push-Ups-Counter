@@ -1,0 +1,18 @@
+--extra-index-url https://download.pytorch.org/whl/cu116
+
+numpy
+pandas
+matplotlib
+black
+tqdm
+mediapipe
+opencv-python==4.5.5.62
+wandb
+scikit-learn
+pytube
+
+torch==1.13.1+cu116
+torchvision==0.14.1+cu116
+
+jupyter
+notebook
